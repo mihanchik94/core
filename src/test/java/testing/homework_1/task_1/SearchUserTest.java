@@ -5,7 +5,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.function.Predicate;
+
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 
 public class SearchUserTest {
     private static SearchUser sut;
@@ -34,7 +37,7 @@ public class SearchUserTest {
                 new User("Tanya", 70),
                 new User("Tanya", 15)
         );
-        assertEquals(sut.search(users, user -> user.getName().equals("Tanya")), expected);
+        assertThat(sut.search(users, user -> user.getName().equals("Tanya")), is(expected));
     }
 
     @Test
@@ -44,12 +47,32 @@ public class SearchUserTest {
                 new User("Tanya", 15),
                 new User("Denis", 16)
         );
-        assertEquals(sut.search(users, user -> user.getAge() < 20), expected);
+        assertThat(sut.search(users, user -> user.getAge() < 20), is(expected));
     }
 
     @Test
-    public void whenEmpty() {
+    public void whenEmptyByAge() {
         List<User> expected = List.of();
-        assertEquals(sut.search(users, user -> user.getAge() > 70), expected);
+        assertThat(sut.search(users, user -> user.getAge() > 70), is(expected));
+    }
+
+    @Test (expected = NullPointerException.class)
+    public void whenPredicateIsNull() {
+        Predicate<User> pred = null;
+        sut.search(users, pred);
+    }
+
+    @Test
+    public void whenFilterPartOfName() {
+        assertThat(sut.search(users, user -> user.getName().contains("ya")),
+                containsInAnyOrder(
+                        new User("Tanya", 70),
+                        new User("Tanya", 15),
+                        new User("Petya", 7)));
+    }
+
+    @Test
+    public void whenEmptyByName() {
+        assertThat(sut.search(users, user -> user.getName().equals("Ilya")), is(emptyCollectionOf(User.class)));
     }
 }
